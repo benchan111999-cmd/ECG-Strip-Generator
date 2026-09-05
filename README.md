@@ -37,7 +37,9 @@ uv run --locked ecg-strip render output/fixture-12.json --output output/draft-12
 ```
 
 Use a new output path for each run. The supplied ramp/triangle signals test the
-renderer and do not represent diagnostic rhythms. See
+renderer and do not represent diagnostic rhythms. Twelve-lead output uses three
+continuous 10-second rows plus a full 10-second Lead II rhythm strip; calibration
+appears once per row at the right edge by default. See
 [rendering and calibration](docs/rendering-and-calibration.md) for the request
 format, supported settings, output files and physical-calibration limits.
 

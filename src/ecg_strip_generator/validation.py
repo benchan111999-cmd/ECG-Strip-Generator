@@ -39,7 +39,39 @@ def prepare_signal(request: RenderRequest) -> PreparedSignal:
     duration = len(values) / source.sampling_rate_hz
     if not 0.5 <= duration <= 30:
         raise ValueError("Rendered windows must be between 0.5 and 30 seconds")
+    if len(requested) == 12 and not np.isclose(duration, 10.0, rtol=0, atol=1e-9):
+        raise ValueError(
+            "Twelve-lead layout requires exactly 10 seconds, including continuous Lead II"
+        )
     times = np.arange(len(values), dtype=np.float64) / source.sampling_rate_hz
     values.setflags(write=False)
     times.setflags(write=False)
     return PreparedSignal(leads, values, times, duration, factor)
+
+
+@dataclass(frozen=True)
+class DisplaySegment:
+    row: int
+    lead: str
+    start_sample: int
+    end_sample: int
+    start_s: float
+    end_s: float
+    role: str = "standard"
+
+
+def display_segments(signal: PreparedSignal) -> tuple[DisplaySegment, ...]:
+    """One shared slice plan for drawing and provenance; intervals are half-open."""
+    if len(signal.leads) != 12:
+        return tuple(
+            DisplaySegment(row, lead, 0, len(signal.times_s), 0.0, signal.duration_s)
+            for row, lead in enumerate(signal.leads)
+        )
+    segments = []
+    for index, lead in enumerate(signal.leads):
+        row, column = divmod(index, 4)
+        start, end = column * 2.5, (column + 1) * 2.5
+        first, stop = np.searchsorted(signal.times_s, (start, end), side="left")
+        segments.append(DisplaySegment(row, lead, int(first), int(stop), start, end))
+    segments.append(DisplaySegment(3, "II", 0, len(signal.times_s), 0.0, 10.0, "rhythm"))
+    return tuple(segments)

@@ -2,132 +2,158 @@
 
 ## Implemented boundary
 
-Milestone 1 renders **unreviewed drafts** from validated physical samples in a
-JSON request. It supports one, two, or twelve exact recorded leads, a grid,
-calibration pulse, optional title/prompt, PDF, PNG, and an output manifest.
-It does not verify a dataset's original files, approve clinical labels, or
-create student/instructor teaching packs.
+The renderer creates **unreviewed drafts** from validated physical samples:
+one/two-lead rhythm rows or a twelve-lead **3 × 4 + Lead II rhythm strip**.
+Outputs are PDF, PNG and a provenance manifest. Source-file verification,
+clinical approval and student/instructor teaching packages are still pending.
 
 ## Reproduce the non-clinical example
 
-From the repository after `uv sync --locked --python 3.12`:
+After `uv sync --locked --python 3.12`, run:
 
 ```console
 uv run --locked python examples/make_fixture.py --leads 12 --output output/fixture-12.json
 uv run --locked ecg-strip render output/fixture-12.json --output output/draft-12
 ```
 
-Use `--leads 1` or `--leads 2` for the other layouts. Choose a new fixture
-filename and output directory each time; existing destinations are never
-overwritten. The example's triangles/ramps are deliberately **not ECG rhythms**.
-Twelve channels are independent test functions, not a physiological lead model.
-These samples and all generated files remain under ignored `output/`.
+Use `--leads 1` or `--leads 2` for two-second one-/two-lead examples.
+The twelve-channel example supplies ten seconds. Its triangle/ramp functions
+are deliberately **not ECG rhythms or a physiological lead model**.
 
-Each render creates `strip.pdf`, `strip.png`, and `manifest.json`.
-A failed filesystem write can leave a partial new directory; only a successful
-command with all three files is a complete render bundle. It is still a draft.
+Choose new filenames/directories; existing destinations are never overwritten.
+Each successful render creates `strip.pdf`, `strip.png`, and
+`manifest.json`. A filesystem error can leave a partial new directory; only
+all three files plus a successful command constitute a complete draft bundle.
+
+## Continuous twelve-lead print layout
+
+Owner clarification on 2026-09-05 replaces the initial isolated, simultaneous
+panels. All twelve input channels must be present for the **same continuous
+10-second window**. Upper rows use sequential quarter-window excerpts:
+
+| Row | 0–2.5 s | 2.5–5 s | 5–7.5 s | 7.5–10 s |
+|---|---|---|---|---|
+| 1 | I | aVR | V1 | V4 |
+| 2 | II | aVL | V2 | V5 |
+| 3 | III | aVF | V3 | V6 |
+| 4 | **Lead II continuously across all 10 seconds** | | | |
+
+The x-axis advances continuously across each row. There are no internal panel
+gutters or per-lead calibration blocks. Rows share a continuous grid. Different
+lead excerpts remain separate paths: no artificial line interpolates across a
+lead switch. The normal one-sample interval at a switch does not become blank
+panel space.
+
+The bottom rhythm strip uses every original Lead II sample over the window;
+it is never assembled from repeated short snippets. Missing II, shorter/longer
+than ten-second input, and requests for the retired simultaneous twelve-panel
+layout fail explicitly. Select a ten-second source window before rendering;
+the renderer never silently crops, pads, repeats, or resamples.
+
+Set `preset.time_alignment="sequential"` for twelve-lead output.
+One-/two-lead rows retain `"simultaneous"` timing and requested order.
+Previously saved twelve-lead requests must be regenerated with ten seconds and
+the new timing value; they are not silently reinterpreted.
+
+## Calibration
+
+Every row, including the bottom Lead II row, has **one** calibration pulse.
+`preset.calibration_position` accepts `"right"` (default, matching the owner's
+reference) or `"left"`. The pulse is 1 mV high and 0.2 seconds wide.
+
+A 16-mm gutter at the chosen row edge reserves calibration space outside the
+recorded duration. It does not consume any of the ten seconds. No calibration
+markers are inserted at internal lead boundaries.
 
 ## Request and manifest
 
-`RenderRequest` in `models.py` is the input contract. The example produces a
-complete JSON request:
+`RenderRequest` in `models.py` owns the input contract:
 
-- `case`: case ID, source dataset/version/record/reference, declared licence and
-  attribution, declared source checksum/kind, evidence class, exclusive sample
-  window, and three review statuses.
-- `signal`: exact recorded lead names, finite physical samples in sample-major
-  order, sampling rate, and `mV`, `uV`, or `V`. ADC counts are unsupported.
-- `signal_sha256`: checksum of the canonical, validated signal object.
-- `preset`: displayed leads, simultaneous timing, speed, gain, vertical range,
-  DPI, and optional plain-ASCII `title`/`teaching_prompt`.
+- `case`: neutral case ID; source dataset/version/record/reference; declared
+  licence, attribution and source checksum/kind; evidence class; exclusive
+  sample window; independent technical, clinical and teaching statuses.
+- `signal`: exact recorded leads, finite sample-major physical values,
+  sampling rate, and `mV`, `uV`, or `V`. ADC counts are unsupported.
+- `signal_sha256`: checksum of the canonical validated signal.
+- `preset`: displayed leads, timing mode, calibration position, speed/gain,
+  vertical range, DPI, and optional plain-ASCII `title`/`teaching_prompt`.
 
-For a programmatically prepared signal, use `provenance.signal_digest(signal)`.
-It hashes sorted ASCII JSON with compact separators and one final LF, using
-the validated model's numeric representation. This checks the supplied signal,
-**not** the declared source-file checksum. Never recompute it just to conceal
-an unexpected mismatch.
+Use `provenance.signal_digest(signal)` to hash sorted ASCII JSON with compact
+separators and one final LF using the validated numeric representation. This
+checks the supplied values, **not** the declared original source-file checksum.
+Never recompute a digest to conceal an unexpected mismatch.
 
-The output manifest omits raw samples and local paths. It records the source,
-window, leads, conversion factor, renderer environment, output checksums,
-geometry and PNG metadata. It preserves clinical and teaching status.
-`validation.render_checks=passed` is scoped to the render checks;
-overall `case.review.technical_validation` stays `not_run` because full
-raw-source validation is not implemented. This is not a released case manifest.
+The output manifest omits raw samples/local paths and records conversion,
+renderer environment, geometry, PNG metadata and output checksums.
+`display_segments` records each row/lead, intended relative time interval,
+relative sample indices and absolute source indices; the full rhythm strip is
+identified by `role="rhythm"`.
 
-Titles/prompts must be neutral and non-identifying. This renderer does not
-perform student answer-leak checks. Long visible titles/IDs and prompts are
-abbreviated to fit fixed header space; the complete text remains in the manifest.
+All sample intervals are half-open. For sampling rates that do not divide a
+2.5-second boundary exactly, the next column begins at the first sample at or
+after that boundary. Samples retain their original times; no boundary sample
+is duplicated or shifted.
 
-## Lead, timing and unit rules
+`validation.render_checks=passed` is scoped to drawing checks. Overall
+`case.review.technical_validation` stays `not_run` while original-source
+verification remains unavailable; clinical review and teaching release remain
+unreviewed/draft. Titles/prompts must be neutral and non-identifying; these
+bundles have not passed student answer-leak checks. Long visible labels are
+abbreviated to fit; the complete text stays in the manifest.
 
-Only exact names are accepted: the standard twelve leads plus `MLII` and
-`MCL1`. `MLII` is never substituted for `II`. Duplicate, unknown or missing
-requested leads fail. Twelve-lead output requires all twelve standard leads;
-one-/two-lead sources cannot be expanded.
+## Lead and unit rules
 
-One-/two-lead rows preserve requested order. Twelve-lead panels are:
+Supported exact names are the standard twelve leads plus `MLII` and `MCL1`.
+MLII is never substituted for II. Missing, duplicate or unknown leads fail.
+One-/two-lead sources cannot be expanded into twelve leads.
 
-```text
-I    aVR    V1    V4
-II   aVL    V2    V5
-III  aVF    V3    V6
-```
-
-Every panel shows the **same simultaneous time window**. Sequential columns
-are not implemented and are rejected. Samples cover
-`[start_sample, end_sample)`; duration is `N / sampling_rate` and the final
-plotted point is at `(N - 1) / sampling_rate`. No interpolation, filtering,
-resampling, lead inference, or synthetic fallback is performed.
-
-Units convert explicitly to mV: mV × 1, uV × 0.001, V × 1000. Samples outside
-the declared vertical range fail instead of being clipped or auto-scaled.
-Defaults are 25 mm/s, 10 mm/mV, ±2 mV and 150 DPI.
+Unit conversion to mV is explicit: mV × 1, uV × 0.001, V × 1000.
+Values outside the declared vertical range fail instead of being clipped or
+auto-scaled. No interpolation, filtering, lead inference, or synthetic fallback
+is applied. The final plotted sample is at `(N - 1) / sampling_rate`.
 
 ## Physical geometry
 
-Each panel reserves 16 mm for labels/calibration before the waveform.
-The pulse is exactly **1 mV high and 0.2 seconds wide**. Let duration be D,
-paper speed S, gain G, vertical amplitude limit A, rows R and columns C:
+For duration D, speed S, gain G, amplitude limit A and row count R:
 
 - waveform width = D × S mm;
-- panel width = 16 + D × S mm;
-- panel height = 2 × A × G + 8 mm;
-- page width = max(86, 20 + C × panel width + (C - 1) × 8) mm;
-- page height = 42 + R × panel height + (R - 1) × 8 mm.
+- row width = 16 + D × S mm, including the single edge calibration gutter;
+- row height = 2 × A × G + 8 mm;
+- page width = max(86, 20 + row width) mm;
+- page height = 42 + R × row height + (R - 1) × row gap mm.
 
-The 86-mm minimum preserves annotation space without stretching the waveform.
-One/two leads use one column; twelve leads use three rows and four columns.
-PDF page points are millimetres × 72 / 25.4. No tight bounding box or automatic
-layout is used. Encoded PDF page size and PNG dimensions are checked before
-writing; tests also inspect actual PDF calibration-pulse paths and figure
-transforms. Windows must be 0.5–30 seconds, speed 12.5–50 mm/s, gain 5–20 mm/mV,
-vertical amplitude limit 1.5–5 mV, and DPI 72–300. Pages over 1500 mm wide or
-40 million pixels are rejected.
+Twelve-lead output uses four rows with zero inter-row gap. One/two leads use
+one/two rows and an 8-mm row gap. Grid lines are globally aligned even when row
+height is not a multiple of five millimetres.
 
-PDF geometry is numerically verified. **Manual print calibration remains
-unperformed**: print at 100%, disable fit-to-page, and measure both axes before
-claiming physically calibrated release. Large custom pages require suitable
-paper/printer handling; reducing them to A4 changes the scale.
+Defaults: 25 mm/s, 10 mm/mV, ±2 mV, 150 DPI. The twelve-lead test example
+explicitly uses ±1.5 mV, making its PDF 286 × 194 mm without changing waveform
+scale. The supported amplitude limit is 1.5–5 mV; choose an explicit larger
+range if necessary. Larger ranges create taller pages and may require larger
+paper. One-/two-lead windows support 0.5–30 s; twelve leads require exactly 10 s.
+Speed 12.5–50 mm/s, gain 5–20 mm/mV and DPI 72–300 are supported.
+Pages above 1500 mm wide or 40 million pixels fail.
 
-PNG is for display only. It carries duration, sampling rate, DPI, pixels/second,
-pixels/mV and `physical_mm_accuracy=false`. Raster dimensions are integer
-pixels, so subpixel positions are quantized; a screen does not promise physical
-millimetres.
+PDF page points equal millimetres × 72 / 25.4. No tight bounding box or automatic
+layout rescaling is used. Encoded page/pixel dimensions are checked before writes.
+Tests independently inspect encoded PDF pulse dimensions/positions, actual plot
+transforms, waveform sample values and timing, and shared grid alignment.
 
-## Reproducibility and verification
+**Manual print calibration remains unperformed.** Print at 100% with
+fit-to-page disabled and measure both axes before claiming calibrated release.
 
-Run `uv run --locked python -m pytest tests`. Tests cover invalid metadata and
-sample shapes, exact lead selection, three unit conversions, all three layouts,
-actual PDF page/pulse geometry, PNG encoding, amplitude rejection, refusal to
-overwrite, and different-process byte equality.
+PNG carries duration, sampling rate, timing mode, DPI, pixels/second and
+pixels/mV with `physical_mm_accuracy=false`. Integer pixels quantize positions;
+screens do not promise physical millimetres.
 
-The same validated input and preset produce identical PDF, PNG and manifest
-bytes within the same locked Python/library/platform environment. Plot styles
-are isolated, the bundled DejaVu Sans font is selected, path simplification is
-disabled, and PDF dates are omitted. Cross-platform or upgraded-library byte
-identity is not promised; the manifest records the render environment.
-Rendering calls are sequential; Matplotlib global style contexts are not a
-thread-safe concurrent service.
+## Reproducibility
 
-Clinical review, source audit, student/instructor separation, and physical
-print measurement remain separate later checks.
+Run `uv run --locked python -m pytest tests`.
+The same validated request/preset produces identical PDF, PNG and manifest bytes
+within the locked runtime/platform, including fresh-process twelve-lead runs.
+Styles are isolated, DejaVu Sans is selected, path simplification is disabled,
+and PDF dates are omitted. Cross-platform or library-upgrade byte identity is
+not promised; the manifest records the environment and renderer version.
+
+Renderer version 2 retires the independent twelve-panel layout. Rendering is
+sequential; Matplotlib style contexts are not a concurrent service.

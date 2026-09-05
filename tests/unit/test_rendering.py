@@ -16,9 +16,13 @@ from ecg_strip_generator.validation import prepare_signal
 from examples.make_fixture import make_fixture
 
 
-@pytest.mark.parametrize("count,rows,columns", [(1, 1, 1), (2, 2, 1), (12, 3, 4)])
-def test_encoded_page_geometry_and_determinism(tmp_path, count, rows, columns) -> None:
+@pytest.mark.parametrize("count,rows,columns", [(1, 1, 1), (2, 2, 1), (12, 4, 1)])
+@pytest.mark.parametrize("position", ["left", "right"])
+def test_encoded_page_geometry_and_determinism(tmp_path, count, rows, columns, position) -> None:
     request = make_fixture(count)
+    request = request.model_copy(
+        update={"preset": request.preset.model_copy(update={"calibration_position": position})}
+    )
     first = render(request, tmp_path / "first")
     # Host plotting preferences must not change the contract.
     with mpl.rc_context({"font.size": 30, "path.simplify": True, "savefig.bbox": "tight"}):
@@ -29,9 +33,9 @@ def test_encoded_page_geometry_and_determinism(tmp_path, count, rows, columns) -
     pdf = (tmp_path / "first" / "strip.pdf").read_bytes()
     box = re.search(rb"/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*\]", pdf)
     assert box
-    # Expected independently from 2 seconds, 25 mm/s, 16-mm gutter, 48-mm panels.
-    width = 20 + columns * 66 + (columns - 1) * 8
-    height = 42 + rows * 48 + (rows - 1) * 8
+    # Expected independently: 10-s four-row print (12 leads) or 2-s rhythm rows.
+    width = 286 if count == 12 else 86
+    height = 194 if count == 12 else 42 + rows * 48 + (rows - 1) * 8
     assert float(box[1]) == pytest.approx(width * 72 / 25.4, abs=1e-6)
     assert float(box[2]) == pytest.approx(height * 72 / 25.4, abs=1e-6)
     assert b"/CreationDate" not in pdf and b"/ModDate" not in pdf
@@ -48,8 +52,10 @@ def test_encoded_page_geometry_and_determinism(tmp_path, count, rows, columns) -
             xy = np.array([float(v) for v in match.groups()]).reshape(-1, 2)
             if abs(xy[2, 1] - xy[1, 1] - 10 * 72 / 25.4) < 1e-5:
                 pulses.append(xy)
-    assert len(pulses) == count
+    assert len(pulses) == rows
     for xy in pulses:
+        pulse_origin_mm = 0 if position == "left" else (250 if count == 12 else 50)
+        assert xy[0, 0] == pytest.approx((10 + pulse_origin_mm + 2) * 72 / 25.4, abs=1e-5)
         assert xy[3, 0] - xy[2, 0] == pytest.approx(5 * 72 / 25.4, abs=1e-5)
     with Image.open(tmp_path / "first" / "strip.png") as png:
         assert png.size == (int(width / 25.4 * 150), int(height / 25.4 * 150))
@@ -69,29 +75,57 @@ def test_encoded_page_geometry_and_determinism(tmp_path, count, rows, columns) -
 
 
 @pytest.mark.parametrize("speed,gain", [(12.5, 5.0), (25.0, 10.0), (50.0, 20.0)])
-def test_plotted_coordinates_preserve_samples_and_scale(speed, gain) -> None:
+@pytest.mark.parametrize("position", ["left", "right"])
+def test_plotted_coordinates_preserve_samples_and_scale(speed, gain, position) -> None:
     payload = make_fixture(12).model_dump(mode="json")
-    payload["preset"].update(paper_speed_mm_s=speed, gain_mm_mv=gain)
+    payload["preset"].update(paper_speed_mm_s=speed, gain_mm_mv=gain, calibration_position=position)
     request = RenderRequest.model_validate(payload)
     signal = prepare_signal(request)
-    geometry = calculate_geometry(2, request.preset)
+    geometry = calculate_geometry(10, request.preset)
+    expected_rows = [
+        ["I", "aVR", "V1", "V4"],
+        ["II", "aVL", "V2", "V5"],
+        ["III", "aVF", "V3", "V6"],
+        ["II"],
+    ]
+    origin = 16 if position == "left" else 0
     with mpl.rc_context(rc=mpl.rcParamsDefault):
         mpl.rcParams.update(STYLE)
         fig = build_figure(request, signal, geometry)
         fig.canvas.draw()
-        assert len(fig.axes) == 12
-        for index, ax in enumerate(fig.axes):
-            pulse, wave = ax.lines
-            assert ax.texts[0].get_text() == signal.leads[index]
-            np.testing.assert_allclose(wave.get_xdata(), 16 + np.arange(200) / 100 * speed)
-            np.testing.assert_allclose(
-                wave.get_ydata(), geometry.cell_height_mm / 2 + signal.values_mv[:, index] * gain
-            )
-            # Actual figure transform, not merely values written into a manifest.
+        assert len(fig.axes) == 4
+        for row, ax in enumerate(fig.axes):
+            pulse, *waves = ax.lines
+            assert len(waves) == (4 if row < 3 else 1)
+            assert [t.get_text() for t in ax.texts] == expected_rows[row]
+            for col, (lead, wave) in enumerate(zip(expected_rows[row], waves, strict=True)):
+                first, stop = (col * 250, (col + 1) * 250) if row < 3 else (0, 1000)
+                original_channel = request.signal.leads.index(lead)
+                np.testing.assert_allclose(
+                    wave.get_xdata(), origin + np.arange(first, stop) / 100 * speed
+                )
+                np.testing.assert_allclose(
+                    wave.get_ydata(),
+                    geometry.cell_height_mm / 2
+                    + np.array(request.signal.samples)[first:stop, original_channel] * gain,
+                )
             points = ax.transData.transform([(0, 0), (speed, gain)])
             assert points[1, 0] - points[0, 0] == pytest.approx(speed * 150 / 25.4)
             assert points[1, 1] - points[0, 1] == pytest.approx(gain * 150 / 25.4)
             assert max(pulse.get_ydata()) - min(pulse.get_ydata()) == gain
+            if position == "right":
+                assert min(pulse.get_xdata()) > 10 * speed
+            else:
+                assert max(pulse.get_xdata()) < 16
+            # Adjacent row grids share a globally aligned 5-mm lattice.
+            y = geometry.panel_bounds_mm(row)[1]
+            for line in ax.collections[1].get_segments():
+                if line[0, 1] == line[1, 1]:
+                    grid_y = y + line[0, 1]
+                    assert grid_y / 5 == pytest.approx(round(grid_y / 5))
+        # No white inter-row gutter in the twelve-lead print layout.
+        for above, below in zip(fig.axes, fig.axes[1:], strict=False):
+            assert above.get_position().y0 == pytest.approx(below.get_position().y1)
         fig.clear()
 
 

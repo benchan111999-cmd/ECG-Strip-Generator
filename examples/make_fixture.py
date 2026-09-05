@@ -9,6 +9,9 @@ from ecg_strip_generator.provenance import canonical_json, signal_digest
 
 def make_fixture(count: int = 12) -> RenderRequest:
     """No ECG physiology or diagnostic rhythm is modelled by these fixtures."""
+    if count not in (1, 2, 12):
+        raise ValueError("Fixture lead count must be 1, 2 or 12")
+    sample_count = 1000 if count == 12 else 200
     leads = STANDARD_LEADS if count == 12 else ("II",) if count == 1 else ("I", "II")
     # Integer arithmetic gives stable, visibly distinct channel values without random state.
     samples = [
@@ -16,7 +19,7 @@ def make_fixture(count: int = 12) -> RenderRequest:
             (((i + channel * 7) % 40) - 20) / 40.0 * (1 + channel / 24)
             for channel in range(len(leads))
         ]
-        for i in range(200)
+        for i in range(sample_count)
     ]
     signal = Signal(leads=leads, sampling_rate_hz=100.0, unit="mV", samples=samples)
     digest = signal_digest(signal)
@@ -37,11 +40,16 @@ def make_fixture(count: int = 12) -> RenderRequest:
                 },
                 "source_evidence": "synthetic_didactic",
                 "start_sample": 0,
-                "end_sample": 200,
+                "end_sample": sample_count,
             },
             "signal": signal.model_dump(mode="json"),
             "signal_sha256": digest,
-            "preset": {"displayed_leads": leads},
+            "preset": {
+                "displayed_leads": leads,
+                "time_alignment": "sequential" if count == 12 else "simultaneous",
+                "calibration_position": "right",
+                "amplitude_limit_mv": 1.5 if count == 12 else 2.0,
+            },
         }
     )
 

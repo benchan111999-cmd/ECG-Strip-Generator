@@ -69,6 +69,7 @@ def test_cannot_expand_one_lead_into_twelve() -> None:
 def test_exact_selected_order_and_amplitudes() -> None:
     payload = make_fixture(12).model_dump(mode="json")
     payload["preset"]["displayed_leads"] = ["V6", "I"]
+    payload["preset"]["time_alignment"] = "simultaneous"
     result = prepare_signal(RenderRequest.model_validate(payload))
     assert result.leads == ("V6", "I")
     np.testing.assert_array_equal(
@@ -138,3 +139,43 @@ def test_unknown_source_declarations_fail(field, value) -> None:
     payload["case"]["source"][field] = value
     with pytest.raises(ValidationError):
         RenderRequest.model_validate(payload)
+
+
+@pytest.mark.parametrize("samples", [200, 999, 1001])
+def test_twelve_lead_requires_exact_ten_seconds(samples) -> None:
+    payload = make_fixture(12).model_dump(mode="json")
+    payload["signal"]["samples"] = (
+        payload["signal"]["samples"][:samples]
+        if samples <= 1000
+        else payload["signal"]["samples"] + [payload["signal"]["samples"][-1]]
+    )
+    payload["case"]["end_sample"] = samples
+    payload["signal_sha256"] = signal_digest(Signal.model_validate(payload["signal"]))
+    with pytest.raises(ValueError, match="exactly 10 seconds"):
+        prepare_signal(RenderRequest.model_validate(payload))
+
+
+def test_old_simultaneous_twelve_lead_request_fails_explicitly() -> None:
+    payload = make_fixture(12).model_dump(mode="json")
+    payload["preset"]["time_alignment"] = "simultaneous"
+    with pytest.raises(ValidationError, match="sequential"):
+        RenderRequest.model_validate(payload)
+
+
+def test_fractional_column_sample_boundaries() -> None:
+    from ecg_strip_generator.validation import display_segments
+
+    payload = make_fixture(12).model_dump(mode="json")
+    payload["signal"]["sampling_rate_hz"] = 257.0
+    payload["signal"]["samples"] = [[float(i % 10) / 10] * 12 for i in range(2570)]
+    payload["case"].update(start_sample=5000, end_sample=7570)
+    payload["signal_sha256"] = signal_digest(Signal.model_validate(payload["signal"]))
+    result = display_segments(prepare_signal(RenderRequest.model_validate(payload)))
+    assert [(s.start_sample, s.end_sample) for s in result[:4]] == [
+        (0, 643),
+        (643, 1285),
+        (1285, 1928),
+        (1928, 2570),
+    ]
+    assert (result[-1].lead, result[-1].role) == ("II", "rhythm")
+    assert (result[-1].start_sample, result[-1].end_sample) == (0, 2570)

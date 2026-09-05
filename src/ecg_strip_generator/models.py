@@ -104,7 +104,8 @@ class CaseManifest(Contract):
 
 class RenderPreset(Contract):
     displayed_leads: Annotated[tuple[Lead, ...], Field(min_length=1, max_length=12)]
-    time_alignment: Literal["simultaneous"] = "simultaneous"
+    time_alignment: Literal["simultaneous", "sequential"] = "simultaneous"
+    calibration_position: Literal["left", "right"] = "right"
     paper_speed_mm_s: Annotated[Finite, Field(ge=12.5, le=50)] = 25.0
     gain_mm_mv: Annotated[Finite, Field(ge=5, le=20)] = 10.0
     amplitude_limit_mv: Annotated[Finite, Field(ge=1.5, le=5)] = 2.0
@@ -117,6 +118,9 @@ class RenderPreset(Contract):
         count = len(self.displayed_leads)
         if count not in (1, 2, 12):
             raise ValueError("Only one-, two-, and twelve-lead layouts are supported")
+        required_alignment = "sequential" if count == 12 else "simultaneous"
+        if self.time_alignment != required_alignment:
+            raise ValueError(f"This layout requires time_alignment='{required_alignment}'")
         if len(set(self.displayed_leads)) != count:
             raise ValueError("Displayed lead names must be unique")
         if count == 12 and set(self.displayed_leads) != set(STANDARD_LEADS):

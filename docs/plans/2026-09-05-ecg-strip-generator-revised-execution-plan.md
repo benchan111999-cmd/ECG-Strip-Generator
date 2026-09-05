@@ -221,6 +221,16 @@ ECG-Image-Kit is deferred until the core system is complete. If added later:
 - prohibit automatic lead substitution; and
 - treat paper damage, scanning, handwriting, and perspective effects as cosmetic derivatives only.
 
+### 9.4 Twelve-lead print layout — owner clarification, 2026-09-05
+
+Replace the initial isolated simultaneous-panel implementation with three
+continuous rows of sequential 2.5-second lead excerpts over a common 10-second
+window (I/aVR/V1/V4, II/aVL/V2/V5, III/aVF/V3/V6). Add a fourth row containing
+the complete consecutive 10-second Lead II recording. Do not insert internal
+panel gaps, repeat snippets, fabricate missing Lead II, or connect different
+lead voltages with interpolated lines. Put one calibration pulse at either
+edge of every row, default right. Record timing and sample boundaries explicitly.
+
 ## 10. Synthetic Signal Contract
 
 Synthetic output is allowed only as `synthetic_didactic`.
