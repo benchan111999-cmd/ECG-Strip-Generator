@@ -43,6 +43,28 @@ appears once per row at the right edge by default. See
 [rendering and calibration](docs/rendering-and-calibration.md) for the request
 format, supported settings, output files and physical-calibration limits.
 
+## Preview gallery
+
+These are non-clinical ramp/triangle fixtures for checking layout and scale,
+not diagnostic ECGs. Click an image to inspect its full resolution.
+
+### One lead — continuous 6 seconds
+
+![One-lead six-second non-clinical preview](docs/previews/one-lead-6s.png)
+
+### Six leads — continuous 10 seconds per row
+
+![Six-lead ten-second non-clinical preview](docs/previews/six-lead-10s.png)
+
+### Twelve leads — 3 × 4 plus continuous 10-second Lead II
+
+![Twelve-lead non-clinical preview with full Lead II rhythm strip](docs/previews/twelve-lead-10s.png)
+
+These owner-approved public previews are stored in `docs/previews/`; ordinary
+local generated output remains ignored. Reproduce with `examples/make_fixture.py`
+using `--leads 1 --duration 6`, `--leads 6 --duration 10`, or
+`--leads 12 --duration 10`, then render each request with `ecg-strip render`.
+
 ## Development checks
 
 ```console
