@@ -145,9 +145,10 @@ replace the derived catalog only. Raw bundles and case manifests remain untouche
 Do not import source patient IDs, personal metadata, secrets or absolute paths
 into public exports.
 
-## Next slice
+## Real-data slice
 
-Milestone 3 starts with NSRDB and PTB-XL. It will explicitly select complete
-record/header/annotation groups and check waveform semantics before generating
-draft candidates. No actual waveform recordings are needed for Milestone 2's
-transport smoke test; a small official RECORDS list is sufficient.
+Milestone 3 uses PTB-XL for both rhythm strips and twelve-lead drafts under the
+owner-approved 2026-09-06 amendment. NSRDB's 18 verified headers declare gain zero;
+it is deferred pending source-grounded calibration evidence. No default gain is
+applied. See [real-data drafts](real-data-drafts.md) for the explicit acquisition,
+calibration, source-name mapping, metadata filtering and draft-only contracts.

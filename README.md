@@ -7,8 +7,9 @@ ECG Strip Generator is a standalone tool-development subproject of ECG Course.
 Milestone 1 provides validated draft PDF/PNG rendering for one through six and twelve
 leads, with reproducible output and a provenance manifest. Milestone 2 adds a
 nine-source registry, attribution notices, explicit subset downloads and offline
-raw-byte auditing. Real waveform extraction and reviewed teaching packages
-remain future milestones. See the
+raw-byte auditing. Milestone 3 adds verified PTB-XL waveform extraction and
+separated student/instructor drafts. Clinical review and teaching release
+remain pending. See the
 [approved execution plan](docs/plans/2026-09-05-ecg-strip-generator-revised-execution-plan.md).
 
 This tool is for personal, non-commercial education only, not patient care,
@@ -48,6 +49,10 @@ acquire related files as one atomic bundle. Downloads remain under ignored
 See [source handling](docs/data-sources.md) for the storage contract and limits.
 
 ## Try a non-clinical draft
+
+For actual recorded ECG candidates, see the [real-data draft workflow](docs/real-data-drafts.md).
+It covers calibrated PTB-XL single/two-lead and twelve-lead views; NSRDB is
+deferred pending calibration evidence. Real outputs remain local and unreviewed.
 
 ```console
 uv run --locked python examples/make_fixture.py --leads 12 --output output/fixture-12.json
@@ -92,14 +97,15 @@ uv run --locked ruff check .
 uv run --locked ruff format --check .
 ```
 
-Fast tests require no external datasets. Later dataset tests must never download
-data implicitly.
+Fast tests require no external datasets. Dataset tests skip unless
+`ECG_PTBXL_BUNDLE` explicitly identifies a local verified bundle; they never download data.
 
 ## Documentation
 
 - [Architecture](docs/architecture.md)
 - [Clinical safety](docs/clinical-safety.md)
 - [Data sources](docs/data-sources.md)
+- [Real-data drafts](docs/real-data-drafts.md)
 - [Rendering and calibration](docs/rendering-and-calibration.md)
 
 ## Language

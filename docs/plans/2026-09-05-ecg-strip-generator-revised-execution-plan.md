@@ -553,6 +553,13 @@ Automated tests cannot approve clinical accuracy. Clinical review and teaching r
 
 **Sources:** NSRDB and PTB-XL first; INCART adapter foundation if needed.
 
+**Owner-approved amendment, 2026-09-06:** Use PTB-XL for the single/two-lead
+and twelve-lead candidates in this milestone. All 18 checksum-verified NSRDB
+headers declare gain zero (uncalibrated under the WFDB header specification).
+Defer NSRDB until independent calibration evidence is reviewed; never substitute
+the WFDB default gain or silently assume physical amplitude. Selecting actual
+PTB-XL leads does not fabricate leads. Clinical and teaching approval remain pending.
+
 **Planned outputs:**
 
 - a real one- or two-lead normal rhythm candidate;
