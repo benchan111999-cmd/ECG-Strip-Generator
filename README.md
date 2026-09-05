@@ -4,9 +4,9 @@ ECG Strip Generator is a standalone tool-development subproject of ECG Course.
 
 ## Status
 
-Milestone 0 provides a Python project skeleton, runtime-report command, and
-development checks. ECG rendering, dataset handling, and reviewed teaching
-packages are not implemented yet. See the
+Milestone 1 provides validated draft PDF/PNG rendering for one, two and twelve
+leads, with reproducible output and a provenance manifest. Dataset handling and
+reviewed teaching packages are not implemented yet. See the
 [approved execution plan](docs/plans/2026-09-05-ecg-strip-generator-revised-execution-plan.md).
 
 This tool is for personal, non-commercial education only, not patient care,
@@ -29,11 +29,23 @@ Python if needed and package dependencies, but no ECG datasets.
 `doctor` reports runtime identity only. It does not certify dataset availability,
 clinical correctness, or rendering calibration.
 
+## Try a non-clinical draft
+
+```console
+uv run --locked python examples/make_fixture.py --leads 12 --output output/fixture-12.json
+uv run --locked ecg-strip render output/fixture-12.json --output output/draft-12
+```
+
+Use a new output path for each run. The supplied ramp/triangle signals test the
+renderer and do not represent diagnostic rhythms. See
+[rendering and calibration](docs/rendering-and-calibration.md) for the request
+format, supported settings, output files and physical-calibration limits.
+
 ## Development checks
 
 ```console
 uv run --locked python -c "import ecg_strip_generator"
-uv run --locked python -m pytest tests/unit
+uv run --locked python -m pytest tests
 uv run --locked ruff check .
 uv run --locked ruff format --check .
 ```

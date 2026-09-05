@@ -1,4 +1,4 @@
-"""Exercise the installed command boundary without datasets or network access."""
+"""Installed command boundaries; no external data or network."""
 
 from importlib.metadata import version
 
@@ -19,12 +19,13 @@ def test_doctor_discloses_incomplete_validation() -> None:
     result = runner.invoke(app, ["doctor"])
     assert result.exit_code == 0
     assert "Python 3.12." in result.stdout
-    assert "dataset validation are not implemented" in result.stdout
+    assert "Raw dataset validation is not implemented" in result.stdout
     assert "Clinical review and teaching release: not performed" in result.stdout
 
 
-def test_unimplemented_render_command_fails(tmp_path, monkeypatch) -> None:
-    monkeypatch.chdir(tmp_path)
-    result = runner.invoke(app, ["render", "case.json"])
+def test_missing_input_does_not_create_output(tmp_path) -> None:
+    result = runner.invoke(
+        app, ["render", str(tmp_path / "missing.json"), "--output", str(tmp_path / "result")]
+    )
     assert result.exit_code != 0
-    assert list(tmp_path.iterdir()) == []
+    assert not (tmp_path / "result").exists()

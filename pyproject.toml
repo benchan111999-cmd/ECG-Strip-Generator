@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "ecg-strip-generator"
 version = "0.1.0"
-description = "Personal, non-commercial ECG teaching tool (development skeleton)"
+description = "Draft-only deterministic ECG rendering for personal, non-commercial education"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [

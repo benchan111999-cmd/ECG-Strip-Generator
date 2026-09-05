@@ -1,25 +1,36 @@
 # Architecture
 
-## Current implementation
+## Implemented modules
 
-Milestone 0 supplies an installable Python 3.12 package and the `ecg-strip`
-command. `doctor` reports runtime identity and explicitly discloses missing
-capabilities. It does not inspect datasets, render signals, or approve cases.
+- `models.py` owns immutable, extra-field-rejecting Pydantic request contracts.
+- `validation.py` verifies the signal checksum, selects exact channels, converts
+  physical units to mV, and rejects clipping/invalid windows.
+- `provenance.py` owns canonical JSON and SHA-256 encoding.
+- `rendering/geometry.py` owns physical page and panel dimensions.
+- `rendering/matplotlib_renderer.py` draws fixed geometry and writes draft PDF,
+  PNG and manifest bundles.
+- `cli.py` validates the JSON request and reports errors without falling back.
+- `examples/make_fixture.py` provides non-clinical verification input only.
 
-## Planned boundaries
-
-Follow the [approved execution plan](plans/2026-09-05-ecg-strip-generator-revised-execution-plan.md).
-Future modules will separate source loading, manifest validation, deterministic
-rendering, and teaching packages. Create each module only in its milestone.
+See [rendering and calibration](rendering-and-calibration.md) for the input
+format and measurable guarantees. The approved plan still governs future
+source loaders, selection, synthetic teaching recipes and teaching packages.
 
 ## Canonical records
 
-Per-case manifests will own the four independent evidence/review axes. A future
-SQLite catalog is a derived view. Obsidian owns project progress; Git owns code
-history; Hindsight holds compact working context.
+The case manifest owns the independent evidence/review axes. Render-only checks
+are scoped separately and cannot upgrade whole-case technical validation,
+clinical review or teaching release. A future SQLite catalog is a derived view.
+Obsidian owns project progress; Git owns code history; Hindsight holds compact
+working context.
 
-## Local storage
+## Local storage and effects
 
-`data/staging`, `data/raw`, `data/derived`, and `data/catalog` are local-only.
-Future downloads must be verified before promotion; raw data is immutable.
-`output/student` and `output/instructor` will remain separate, ignored roots.
+Rendering consumes a fully specified JSON request and makes no network request.
+Validation and encoding complete in memory before a new output directory is
+created. Existing output directories are rejected. A filesystem failure may
+leave an incomplete new directory; it must not be treated as a complete bundle.
+
+`data/staging`, `data/raw`, `data/derived`, and `data/catalog` remain
+local-only and unimplemented. Future downloads must be verified before promotion;
+raw data is immutable. Future student/instructor packages will use separate roots.

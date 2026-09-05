@@ -1,0 +1,1 @@
+"""Deterministic, draft-only rendering."""

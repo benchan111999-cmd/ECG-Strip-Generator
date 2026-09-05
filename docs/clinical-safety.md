@@ -2,24 +2,34 @@
 
 ## Intended use
 
-Personal, non-commercial education only. This development skeleton does not
-diagnose patients, generate clinical evidence, or produce reviewed teaching cases.
+Personal, non-commercial education only. Milestone 1 creates unreviewed draft
+renders; it does not diagnose patients, generate clinical evidence, or approve
+teaching cases. Included triangle/ramp fixtures are non-clinical tests, including
+the twelve-channel example. They are not synthetic diagnostic ECG recipes.
 
 ## Independent review gates
 
-Future cases must separately record source evidence, technical validation,
-clinical review, and teaching release. A passing automated test approves neither
-a clinical label nor teaching release. See the approved plan, section 5.
+Source evidence, technical validation, clinical review, and teaching release
+are distinct axes. The renderer accepts only initially unreviewed drafts.
+A render-specific pass does not approve overall technical validation: original
+dataset files/checksums have not been verified. It never approves clinical or
+teaching status. See the approved plan, section 5.
 
 ## Lead and source integrity
 
-Future commands must fail on absent requested leads or uncertain units/gain;
-they must not substitute leads or synthesize missing channels. Synthetic output
-must be labelled and human-reviewed. Different onset/termination episodes must
-not imply shared identity or continuity.
+Exact recorded leads and physical units are required. No first-lead fallback,
+MLII-to-II alias, missing-channel inference, filtering or automatic gain
+adjustment exists. Invalid samples, checksum mismatches, and clipping fail.
+
+Source licence/version/attribution must be explicitly declared; this is not
+verification of those declarations against the original dataset. Milestone 2
+will establish source audit. Separate onset/termination pairs are not implemented;
+no output implies shared episode identity.
 
 ## Privacy and answer separation
 
-No patient identifiers, student names, secrets, raw datasets, or private answer
-keys belong in Git. Student/instructor package separation and leak checks are
-required before teaching release; they are not implemented in Milestone 0.
+Do not include patient identifiers, student names, secrets or answer keys in
+requests, titles/prompts, sources or Git. Generated drafts include source
+provenance and have not passed student answer-leak checks. They are not student
+packages. Student/instructor separation and human review remain required before
+teaching release. Synthetic twelve-lead teaching release remains disabled.
