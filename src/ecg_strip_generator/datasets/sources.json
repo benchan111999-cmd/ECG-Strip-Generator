@@ -1,0 +1,69 @@
+[
+  {
+    "id": "ptb-xl", "version": "1.0.3", "title": "PTB-XL, a large publicly available electrocardiography dataset", "role": "core", "licence": "CC-BY-4.0",
+    "citation": "Wagner, P., Strodthoff, N., Bousseljot, R., Samek, W., & Schaeffter, T. (2022). PTB-XL (version 1.0.3). PhysioNet. https://doi.org/10.13026/kfzx-aw45",
+    "additional_citations": ["Wagner et al. (2020). PTB-XL: A Large Publicly Available ECG Dataset. Scientific Data. https://doi.org/10.1038/s41597-020-0495-6"],
+    "lead_characteristics": "Twelve recorded leads; ten seconds; 500 Hz and supplied 100 Hz derivative.",
+    "annotation_characteristics": "SCP-ECG diagnostic, form and rhythm statements; potentially multiple labels.",
+    "limitations": ["Static records do not establish onset or termination.", "Source patient identifiers and pseudonymized staff/site metadata must not enter public manifests.", "Label likelihood and human validation metadata require case-level review."], "reviewed_on": "2026-09-06"
+  },
+  {
+    "id": "incartdb", "version": "1.0.0", "title": "St Petersburg INCART 12-lead Arrhythmia Database", "role": "core", "licence": "ODC-By-1.0",
+    "citation": "Yakushenko, E. (2008). St Petersburg INCART 12-lead Arrhythmia Database (version 1.0.0). PhysioNet. https://doi.org/10.13026/C2V88N",
+    "lead_characteristics": "Twelve recorded leads in half-hour records; use individual headers for gain and timing.",
+    "annotation_characteristics": "Reference beat annotations with additional verification.",
+    "limitations": ["Beat labels do not prove all rhythm mechanisms.", "Headers were corrected in 2015 without changing the version; retain actual byte checksums."], "reviewed_on": "2026-09-06"
+  },
+  {
+    "id": "mitdb", "version": "1.0.0", "title": "MIT-BIH Arrhythmia Database", "role": "core", "licence": "ODC-By-1.0",
+    "citation": "Moody, G. B., & Mark, R. G. MIT-BIH Arrhythmia Database (version 1.0.0). PhysioNet. https://doi.org/10.13026/C2F305",
+    "additional_citations": ["Moody, G. B., & Mark, R. G. (2001). The impact of the MIT-BIH Arrhythmia Database. IEEE Engineering in Medicine and Biology, 20(3), 45-50."],
+    "lead_characteristics": "Two recorded channels, 360 Hz; exact lead names must come from each header.",
+    "annotation_characteristics": "Expert reference annotations for beats; inspect rhythm context separately.",
+    "limitations": ["Do not relabel MLII as II or synthesize missing leads.", "Annotation corrections can occur within a version; byte checksums are required."], "reviewed_on": "2026-09-06"
+  },
+  {
+    "id": "svdb", "version": "1.0.0", "title": "MIT-BIH Supraventricular Arrhythmia Database", "role": "core", "licence": "ODC-By-1.0",
+    "citation": "MIT-BIH Supraventricular Arrhythmia Database (version 1.0.0, 1999). PhysioNet. https://doi.org/10.13026/C2V30W",
+    "lead_characteristics": "Recorded rhythm-strip channels only; read names, count and sampling rate from headers.",
+    "annotation_characteristics": "Beat annotation files accompany half-hour supraventricular arrhythmia examples.",
+    "limitations": ["No automatic AVNRT or AVRT mechanism assignment.", "No twelve-lead expansion."], "reviewed_on": "2026-09-06"
+  },
+  {
+    "id": "afdb", "version": "1.0.0", "title": "MIT-BIH Atrial Fibrillation Database", "role": "core", "licence": "ODC-By-1.0",
+    "citation": "Moody, G. B., & Mark, R. G. MIT-BIH Atrial Fibrillation Database (version 1.0.0). PhysioNet. https://doi.org/10.13026/C2MW2D",
+    "additional_citations": ["Moody, G. B., & Mark, R. G. (1983). A new method for detecting atrial fibrillation using R-R intervals. Computers in Cardiology, 10, 227-230."],
+    "lead_characteristics": "Two signals at 250 Hz where waveform data exists.",
+    "annotation_characteristics": "Manual .atr rhythm labels; automated unaudited .qrs beats; some corrected .qrsc files.",
+    "limitations": ["00735 and 03665 lack waveform files.", "Some recordings contain zero-filled missing blocks; these are not asystole evidence.", "N denotes other rhythms, not a guaranteed normal diagnosis; beat files do not distinguish beat types."], "reviewed_on": "2026-09-06"
+  },
+  {
+    "id": "vfdb", "version": "1.0.0", "title": "MIT-BIH Malignant Ventricular Ectopy Database", "role": "core", "licence": "ODC-By-1.0",
+    "citation": "MIT-BIH Malignant Ventricular Ectopy Database (version 1.0.0, 1999). PhysioNet. https://doi.org/10.13026/C22P44",
+    "additional_citations": ["Greenwald, S. D., Albrecht, P., Moody, G. B., & Mark, R. G. (1985). Estimating confidence limits for arrhythmia detector performance. Computers in Cardiology, 12, 383-386."],
+    "lead_characteristics": "Recorded rhythm-strip channels; exact names and calibration from headers.",
+    "annotation_characteristics": "Rhythm-change .atr annotations, including ventricular and other rhythms; no beat labels.",
+    "limitations": ["NOISE does not terminate the preceding rhythm; inspect annotation semantics.", "SVTA does not identify a specific supraventricular mechanism."], "reviewed_on": "2026-09-06"
+  },
+  {
+    "id": "nsrdb", "version": "1.0.0", "title": "MIT-BIH Normal Sinus Rhythm Database", "role": "core", "licence": "ODC-By-1.0",
+    "citation": "MIT-BIH Normal Sinus Rhythm Database (version 1.0.0, 1999). PhysioNet. https://doi.org/10.13026/C2NK5R",
+    "lead_characteristics": "Long-duration recorded rhythm-strip channels; validate individual headers.",
+    "annotation_characteristics": "Reference recordings from subjects without significant arrhythmias; .atr files are supplied.",
+    "limitations": ["Dataset selection does not clinically approve every extracted window.", "Not a twelve-lead source."], "reviewed_on": "2026-09-06"
+  },
+  {
+    "id": "cudb", "version": "1.0.0", "title": "CU Ventricular Tachyarrhythmia Database", "role": "supplementary", "licence": "ODC-By-1.0",
+    "citation": "CU Ventricular Tachyarrhythmia Database (version 1.0.0, 2007). PhysioNet. https://doi.org/10.13026/C2X59M",
+    "lead_characteristics": "Monitor/Holter signals at 250 Hz; only recorded channels may be displayed.",
+    "annotation_characteristics": "Event-location annotations with approximate VF boundaries.",
+    "limitations": ["Annotations are not definitive; all beats are labelled normal despite ectopy.", "Pacing artifacts may not be visible; supplementary evidence only."], "reviewed_on": "2026-09-06"
+  },
+  {
+    "id": "sddb", "version": "1.0.0", "title": "Sudden Cardiac Death Holter Database", "role": "supplementary", "licence": "ODC-By-1.0",
+    "citation": "Sudden Cardiac Death Holter Database (version 1.0.0, 2004). PhysioNet. https://doi.org/10.13026/C2W306",
+    "lead_characteristics": "Long Holter recordings; only recorded channels and header-declared calibration.",
+    "annotation_characteristics": "Mixed annotation files; audited coverage is incomplete.",
+    "limitations": ["Limited retrospective metadata and incomplete annotations.", "Supplementary candidates cannot override stronger source evidence."], "reviewed_on": "2026-09-06"
+  }
+]

@@ -19,7 +19,7 @@ def test_doctor_discloses_incomplete_validation() -> None:
     result = runner.invoke(app, ["doctor"])
     assert result.exit_code == 0
     assert "Python 3.12." in result.stdout
-    assert "Raw dataset validation is not implemented" in result.stdout
+    assert "waveform validation is not implemented" in result.stdout
     assert "Clinical review and teaching release: not performed" in result.stdout
 
 

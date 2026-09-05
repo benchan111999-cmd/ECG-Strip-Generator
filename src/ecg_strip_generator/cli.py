@@ -8,6 +8,7 @@ from typing import Annotated
 import typer
 from pydantic import ValidationError
 
+from ecg_strip_generator.datasets.cli import app as datasets_app
 from ecg_strip_generator.models import RenderRequest
 
 app = typer.Typer(
@@ -16,6 +17,9 @@ app = typer.Typer(
     invoke_without_command=True,
     add_completion=False,
 )
+
+
+app.add_typer(datasets_app, name="datasets")
 
 
 @app.callback()
@@ -34,8 +38,8 @@ def doctor() -> None:
     """Report runtime identity only; this does not validate ECGs or datasets."""
     typer.echo(f"ECG Strip Generator {version('ecg-strip-generator')}")
     typer.echo(f"Python {platform.python_version()}")
-    typer.echo("Milestone 1: draft one-, two-, and twelve-lead rendering.")
-    typer.echo("Raw dataset validation is not implemented.")
+    typer.echo("Milestone 2: source registry and immutable subset downloads.")
+    typer.echo("Use datasets audit for byte integrity; waveform validation is not implemented.")
     typer.echo("Clinical review and teaching release: not performed.")
 
 

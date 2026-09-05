@@ -5,8 +5,10 @@ ECG Strip Generator is a standalone tool-development subproject of ECG Course.
 ## Status
 
 Milestone 1 provides validated draft PDF/PNG rendering for one through six and twelve
-leads, with reproducible output and a provenance manifest. Dataset handling and
-reviewed teaching packages are not implemented yet. See the
+leads, with reproducible output and a provenance manifest. Milestone 2 adds a
+nine-source registry, attribution notices, explicit subset downloads and offline
+raw-byte auditing. Real waveform extraction and reviewed teaching packages
+remain future milestones. See the
 [approved execution plan](docs/plans/2026-09-05-ecg-strip-generator-revised-execution-plan.md).
 
 This tool is for personal, non-commercial education only, not patient care,
@@ -28,6 +30,22 @@ Python if needed and package dependencies, but no ECG datasets.
 
 `doctor` reports runtime identity only. It does not certify dataset availability,
 clinical correctness, or rendering calibration.
+
+## Audit or acquire source files
+
+From the repository root:
+
+```console
+uv run --locked ecg-strip datasets audit
+uv run --locked ecg-strip datasets attribution nsrdb --changes "None; original source bytes."
+uv run --locked ecg-strip datasets fetch nsrdb --file RECORDS
+```
+
+`audit` is offline and creates no directories. `fetch` downloads only the
+explicit file selection plus the official checksum list. Repeat `--file` to
+acquire related files as one atomic bundle. Downloads remain under ignored
+`data/`; a verified subset is not a complete or clinically validated dataset.
+See [source handling](docs/data-sources.md) for the storage contract and limits.
 
 ## Try a non-clinical draft
 
