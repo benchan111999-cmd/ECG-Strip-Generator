@@ -37,12 +37,14 @@ def prepare_signal(request: RenderRequest) -> PreparedSignal:
     if np.max(np.abs(values)) > request.preset.amplitude_limit_mv:
         raise ValueError("Signal exceeds display amplitude; choose an explicit larger range")
     duration = len(values) / source.sampling_rate_hz
-    if not 0.5 <= duration <= 30:
-        raise ValueError("Rendered windows must be between 0.5 and 30 seconds")
+    if duration > 30:
+        raise ValueError("Rendered windows must not exceed 30 seconds")
     if len(requested) == 12 and not np.isclose(duration, 10.0, rtol=0, atol=1e-9):
         raise ValueError(
             "Twelve-lead layout requires exactly 10 seconds, including continuous Lead II"
         )
+    if len(requested) != 12 and duration < 6:
+        raise ValueError("One- through six-lead rhythm strips require at least 6 seconds")
     times = np.arange(len(values), dtype=np.float64) / source.sampling_rate_hz
     values.setflags(write=False)
     times.setflags(write=False)

@@ -4,7 +4,7 @@ ECG Strip Generator is a standalone tool-development subproject of ECG Course.
 
 ## Status
 
-Milestone 1 provides validated draft PDF/PNG rendering for one, two and twelve
+Milestone 1 provides validated draft PDF/PNG rendering for one through six and twelve
 leads, with reproducible output and a provenance manifest. Dataset handling and
 reviewed teaching packages are not implemented yet. See the
 [approved execution plan](docs/plans/2026-09-05-ecg-strip-generator-revised-execution-plan.md).

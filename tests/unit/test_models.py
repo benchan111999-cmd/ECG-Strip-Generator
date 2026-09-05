@@ -47,8 +47,8 @@ def test_unit_conversion_preserves_physical_signal(unit, factor) -> None:
     payload["signal_sha256"] = signal_digest(Signal.model_validate(payload["signal"]))
     result = prepare_signal(RenderRequest.model_validate(payload))
     np.testing.assert_allclose(result.values_mv, request.signal.samples, atol=1e-14)
-    np.testing.assert_allclose(result.times_s, np.arange(200) / 100)
-    assert result.duration_s == 2
+    np.testing.assert_allclose(result.times_s, np.arange(600) / 100)
+    assert result.duration_s == 6
 
 
 def test_missing_lead_ii_never_falls_back_to_mlii() -> None:
@@ -179,3 +179,38 @@ def test_fractional_column_sample_boundaries() -> None:
     ]
     assert (result[-1].lead, result[-1].role) == ("II", "rhythm")
     assert (result[-1].start_sample, result[-1].end_sample) == (0, 2570)
+
+
+@pytest.mark.parametrize("count", range(1, 7))
+@pytest.mark.parametrize("sample_count", [2, 200, 599, 600, 1000, 3000, 3001])
+def test_rhythm_duration_boundaries(count, sample_count) -> None:
+    payload = make_fixture(count).model_dump(mode="json")
+    payload["signal"]["samples"] = [[0.1] * count for _ in range(sample_count)]
+    payload["case"]["end_sample"] = sample_count
+    payload["signal_sha256"] = signal_digest(Signal.model_validate(payload["signal"]))
+    request = RenderRequest.model_validate(payload)
+    if sample_count < 600:
+        with pytest.raises(ValueError, match="at least 6 seconds"):
+            prepare_signal(request)
+    elif sample_count > 3000:
+        with pytest.raises(ValueError, match="30 seconds"):
+            prepare_signal(request)
+    else:
+        assert prepare_signal(request).duration_s == sample_count / 100
+
+
+@pytest.mark.parametrize("count", [7, 8, 9, 10, 11])
+def test_unsupported_intermediate_lead_counts(count) -> None:
+    payload = make_fixture(12).model_dump(mode="json")
+    payload["preset"]["displayed_leads"] = payload["signal"]["leads"][:count]
+    payload["preset"]["time_alignment"] = "simultaneous"
+    with pytest.raises(ValidationError, match="layouts are supported"):
+        RenderRequest.model_validate(payload)
+
+
+@pytest.mark.parametrize("count", range(3, 7))
+def test_missing_rhythm_lead_is_not_inferred(count) -> None:
+    payload = make_fixture(2).model_dump(mode="json")
+    payload["preset"] = make_fixture(count).preset.model_dump(mode="json")
+    with pytest.raises(ValueError, match="Missing requested leads"):
+        prepare_signal(RenderRequest.model_validate(payload))

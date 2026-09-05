@@ -12,10 +12,10 @@ from ecg_strip_generator.provenance import canonical_json
 from examples.make_fixture import make_fixture
 
 
-@pytest.mark.parametrize("count", [2, 12])
+@pytest.mark.parametrize("count", [2, 6, 12])
 def test_fresh_process_outputs_match(tmp_path, count) -> None:
     source = tmp_path / "request.json"
-    source.write_bytes(canonical_json(make_fixture(count).model_dump(mode="json")))
+    source.write_bytes(canonical_json(make_fixture(count, 10).model_dump(mode="json")))
     command = (
         str(Path(sys.executable).with_name("ecg-strip.exe"))
         if os.name == "nt"

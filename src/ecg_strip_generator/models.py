@@ -116,8 +116,8 @@ class RenderPreset(Contract):
     @model_validator(mode="after")
     def check_layout(self) -> Self:
         count = len(self.displayed_leads)
-        if count not in (1, 2, 12):
-            raise ValueError("Only one-, two-, and twelve-lead layouts are supported")
+        if count not in (1, 2, 3, 4, 5, 6, 12):
+            raise ValueError("Only one- through six-lead and twelve-lead layouts are supported")
         required_alignment = "sequential" if count == 12 else "simultaneous"
         if self.time_alignment != required_alignment:
             raise ValueError(f"This layout requires time_alignment='{required_alignment}'")

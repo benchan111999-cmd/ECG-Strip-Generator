@@ -12,7 +12,7 @@ Build a reproducible, teaching-only ECG strip generator that can prepare clinica
 
 The completed tool must support:
 
-- one-lead, two-lead, and twelve-lead presentation;
+- one- through six-lead rhythm strips and twelve-lead presentation;
 - normal rhythm;
 - narrow-complex tachycardia;
 - wide-complex tachycardia;
@@ -68,7 +68,7 @@ This plan does not include:
 The project is successful when all of the following are true:
 
 1. A clean installation can run the core CLI in a uv-managed Python 3.12 environment.
-2. The renderer supports one-, two-, and twelve-lead layouts without inventing unavailable leads.
+2. The renderer supports one- through six-lead and twelve-lead layouts without inventing unavailable leads.
 3. Print-ready PDF output is physically calibrated at the declared paper speed and gain when printed at 100% scale.
 4. Digital PNG output carries time and voltage metadata but does not claim physical millimetre accuracy.
 5. Every rendered strip has a machine-readable manifest with source, lead, timing, transformation, licence, and review information.
@@ -194,7 +194,7 @@ Coverage reporting must use `released`, `candidate`, `synthetic_review_required`
 
 Implement a deterministic Matplotlib-based renderer with:
 
-- one-, two-, and twelve-lead layouts;
+- one- through six-lead and twelve-lead layouts;
 - configurable paper speed, default 25 mm/s;
 - configurable gain, default 10 mm/mV;
 - major and minor ECG grid;
@@ -220,6 +220,15 @@ ECG-Image-Kit is deferred until the core system is complete. If added later:
 - compare its output against the canonical render manifest;
 - prohibit automatic lead substitution; and
 - treat paper damage, scanning, handwriting, and perspective effects as cosmetic derivatives only.
+
+### Rhythm-strip duration — owner clarification, 2026-09-05
+
+One- through six-lead rhythm strips must use the complete simultaneous source
+window of at least 6 seconds. Common choices are 6 or 10 seconds; the existing
+30-second upper bound remains. Each selected lead has its own continuous row
+and one edge calibration pulse. Never pad, repeat, or infer missing samples or
+leads to satisfy this requirement. Non-clinical fixtures default to 6 seconds
+for these layouts and offer 10 seconds explicitly.
 
 ### 9.4 Twelve-lead print layout — owner clarification, 2026-09-05
 

@@ -16,7 +16,7 @@ from ecg_strip_generator.validation import prepare_signal
 from examples.make_fixture import make_fixture
 
 
-@pytest.mark.parametrize("count,rows,columns", [(1, 1, 1), (2, 2, 1), (12, 4, 1)])
+@pytest.mark.parametrize("count,rows,columns", [(n, n, 1) for n in range(1, 7)] + [(12, 4, 1)])
 @pytest.mark.parametrize("position", ["left", "right"])
 def test_encoded_page_geometry_and_determinism(tmp_path, count, rows, columns, position) -> None:
     request = make_fixture(count)
@@ -33,8 +33,8 @@ def test_encoded_page_geometry_and_determinism(tmp_path, count, rows, columns, p
     pdf = (tmp_path / "first" / "strip.pdf").read_bytes()
     box = re.search(rb"/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*\]", pdf)
     assert box
-    # Expected independently: 10-s four-row print (12 leads) or 2-s rhythm rows.
-    width = 286 if count == 12 else 86
+    # Expected independently: 10-s four-row print (12 leads) or 6-s rhythm rows.
+    width = 286 if count == 12 else 186
     height = 194 if count == 12 else 42 + rows * 48 + (rows - 1) * 8
     assert float(box[1]) == pytest.approx(width * 72 / 25.4, abs=1e-6)
     assert float(box[2]) == pytest.approx(height * 72 / 25.4, abs=1e-6)
@@ -54,7 +54,7 @@ def test_encoded_page_geometry_and_determinism(tmp_path, count, rows, columns, p
                 pulses.append(xy)
     assert len(pulses) == rows
     for xy in pulses:
-        pulse_origin_mm = 0 if position == "left" else (250 if count == 12 else 50)
+        pulse_origin_mm = 0 if position == "left" else (250 if count == 12 else 150)
         assert xy[0, 0] == pytest.approx((10 + pulse_origin_mm + 2) * 72 / 25.4, abs=1e-5)
         assert xy[3, 0] - xy[2, 0] == pytest.approx(5 * 72 / 25.4, abs=1e-5)
     with Image.open(tmp_path / "first" / "strip.png") as png:
@@ -149,8 +149,8 @@ def test_short_window_labels_remain_on_page() -> None:
     from ecg_strip_generator.provenance import signal_digest
 
     payload = make_fixture(1).model_dump(mode="json")
-    payload["case"].update(case_id="W" * 64, end_sample=50)
-    payload["signal"]["samples"] = payload["signal"]["samples"][:50]
+    payload["case"].update(case_id="W" * 64, end_sample=600)
+    payload["signal"]["samples"] = payload["signal"]["samples"][:600]
     payload["signal_sha256"] = signal_digest(Signal.model_validate(payload["signal"]))
     payload["preset"]["paper_speed_mm_s"] = 12.5
     payload["preset"]["title"] = "W" * 80
@@ -186,3 +186,45 @@ def test_corrupt_encoded_geometry_blocks_output(tmp_path, monkeypatch) -> None:
     with pytest.raises(ValueError, match="PDF page geometry verification failed"):
         render(make_fixture(1), tmp_path / "bad")
     assert not (tmp_path / "bad").exists()
+
+
+@pytest.mark.parametrize("count", range(1, 7))
+@pytest.mark.parametrize("duration", [6, 10])
+def test_rhythm_rows_preserve_full_window_and_requested_order(count, duration) -> None:
+    request = make_fixture(count, duration)
+    payload = request.model_dump(mode="json")
+    payload["preset"]["displayed_leads"].reverse()
+    request = RenderRequest.model_validate(payload)
+    signal = prepare_signal(request)
+    geometry = calculate_geometry(signal.duration_s, request.preset)
+    fig = build_figure(request, signal, geometry)
+    try:
+        assert len(fig.axes) == count
+        for row, ax in enumerate(fig.axes):
+            assert len(ax.lines) == 2  # exactly one calibration and one continuous trace
+            lead = request.preset.displayed_leads[row]
+            wave = ax.lines[1]
+            assert ax.texts[0].get_text() == lead
+            channel = request.signal.leads.index(lead)
+            np.testing.assert_array_equal(wave.get_xdata(), np.arange(duration * 100) / 100 * 25)
+            np.testing.assert_array_equal(
+                wave.get_ydata(),
+                geometry.cell_height_mm / 2 + np.array(request.signal.samples)[:, channel] * 10,
+            )
+            assert geometry.waveform_width_mm == duration * 25
+    finally:
+        fig.clear()
+
+
+def test_short_rhythm_request_creates_no_output(tmp_path) -> None:
+    from ecg_strip_generator.models import Signal
+    from ecg_strip_generator.provenance import signal_digest
+
+    payload = make_fixture(6).model_dump(mode="json")
+    payload["signal"]["samples"] = payload["signal"]["samples"][:599]
+    payload["case"]["end_sample"] = 599
+    payload["signal_sha256"] = signal_digest(Signal.model_validate(payload["signal"]))
+    destination = tmp_path / "short"
+    with pytest.raises(ValueError, match="at least 6 seconds"):
+        render(RenderRequest.model_validate(payload), destination)
+    assert not destination.exists()

@@ -3,7 +3,7 @@
 ## Implemented boundary
 
 The renderer creates **unreviewed drafts** from validated physical samples:
-one/two-lead rhythm rows or a twelve-lead **3 × 4 + Lead II rhythm strip**.
+one- through six-lead rhythm rows or a twelve-lead **3 × 4 + Lead II rhythm strip**.
 Outputs are PDF, PNG and a provenance manifest. Source-file verification,
 clinical approval and student/instructor teaching packages are still pending.
 
@@ -16,7 +16,10 @@ uv run --locked python examples/make_fixture.py --leads 12 --output output/fixtu
 uv run --locked ecg-strip render output/fixture-12.json --output output/draft-12
 ```
 
-Use `--leads 1` or `--leads 2` for two-second one-/two-lead examples.
+Use `--leads 1` through `--leads 6` for six-second rhythm examples.
+Add `--duration 10` for ten seconds (or `--duration 6` explicitly).
+Every rhythm row uses the complete simultaneous window; input shorter than
+six seconds is rejected, never padded or repeated.
 The twelve-channel example supplies ten seconds. Its triangle/ramp functions
 are deliberately **not ECG rhythms or a physiological lead model**.
 
@@ -51,7 +54,7 @@ layout fail explicitly. Select a ten-second source window before rendering;
 the renderer never silently crops, pads, repeats, or resamples.
 
 Set `preset.time_alignment="sequential"` for twelve-lead output.
-One-/two-lead rows retain `"simultaneous"` timing and requested order.
+One- through six-lead rows retain `"simultaneous"` timing and requested order.
 Previously saved twelve-lead requests must be regenerated with ten seconds and
 the new timing value; they are not silently reinterpreted.
 
@@ -122,15 +125,15 @@ For duration D, speed S, gain G, amplitude limit A and row count R:
 - page width = max(86, 20 + row width) mm;
 - page height = 42 + R × row height + (R - 1) × row gap mm.
 
-Twelve-lead output uses four rows with zero inter-row gap. One/two leads use
-one/two rows and an 8-mm row gap. Grid lines are globally aligned even when row
+Twelve-lead output uses four rows with zero inter-row gap. One through six leads use
+one through six rows and an 8-mm row gap. Grid lines are globally aligned even when row
 height is not a multiple of five millimetres.
 
 Defaults: 25 mm/s, 10 mm/mV, ±2 mV, 150 DPI. The twelve-lead test example
 explicitly uses ±1.5 mV, making its PDF 286 × 194 mm without changing waveform
 scale. The supported amplitude limit is 1.5–5 mV; choose an explicit larger
 range if necessary. Larger ranges create taller pages and may require larger
-paper. One-/two-lead windows support 0.5–30 s; twelve leads require exactly 10 s.
+paper. One- through six-lead windows support 6–30 s (common choices: 6 or 10 s); twelve leads require exactly 10 s.
 Speed 12.5–50 mm/s, gain 5–20 mm/mV and DPI 72–300 are supported.
 Pages above 1500 mm wide or 40 million pixels fail.
 
@@ -155,5 +158,6 @@ Styles are isolated, DejaVu Sans is selected, path simplification is disabled,
 and PDF dates are omitted. Cross-platform or library-upgrade byte identity is
 not promised; the manifest records the environment and renderer version.
 
-Renderer version 2 retires the independent twelve-panel layout. Rendering is
+Renderer version 3 adds one- through six-lead rhythm strips with a six-second
+minimum; old short requests must select a longer source window. Version 2 retired the independent twelve-panel layout. Rendering is
 sequential; Matplotlib style contexts are not a concurrent service.
