@@ -19,7 +19,7 @@ from ecg_strip_generator.provenance import canonical_json, sha256
 from ecg_strip_generator.rendering.geometry import MM_PER_INCH, Geometry, calculate_geometry
 from ecg_strip_generator.validation import PreparedSignal, display_segments, prepare_signal
 
-RENDERER_VERSION = "3"
+RENDERER_VERSION = "4"
 STYLE = {
     "font.family": ["DejaVu Sans"],
     "font.size": 7,

@@ -126,7 +126,7 @@ For duration D, speed S, gain G, amplitude limit A and row count R:
 - page height = 42 + R × row height + (R - 1) × row gap mm.
 
 Twelve-lead output uses four rows with zero inter-row gap. One through six leads use
-one through six rows and an 8-mm row gap. Grid lines are globally aligned even when row
+one through six rows with zero inter-row gap (owner correction, 2026-09-06). Grid lines are globally aligned even when row
 height is not a multiple of five millimetres.
 
 Defaults: 25 mm/s, 10 mm/mV, ±2 mV, 150 DPI. The twelve-lead test example
@@ -161,3 +161,6 @@ not promised; the manifest records the environment and renderer version.
 Renderer version 3 adds one- through six-lead rhythm strips with a six-second
 minimum; old short requests must select a longer source window. Version 2 retired the independent twelve-panel layout. Rendering is
 sequential; Matplotlib style contexts are not a concurrent service.
+
+Renderer version 4 removes white gutters between rhythm rows. All multi-row
+layouts share a continuous grid background without changing time or voltage scale.

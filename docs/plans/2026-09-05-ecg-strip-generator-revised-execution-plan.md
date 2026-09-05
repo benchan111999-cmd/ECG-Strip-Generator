@@ -226,7 +226,9 @@ ECG-Image-Kit is deferred until the core system is complete. If added later:
 One- through six-lead rhythm strips must use the complete simultaneous source
 window of at least 6 seconds. Common choices are 6 or 10 seconds; the existing
 30-second upper bound remains. Each selected lead has its own continuous row
-and one edge calibration pulse. Never pad, repeat, or infer missing samples or
+and one edge calibration pulse. Owner correction on 2026-09-06: two- through
+six-lead rows must adjoin with a continuous grid and no white inter-row gutters.
+Never pad, repeat, or infer missing samples or
 leads to satisfy this requirement. Non-clinical fixtures default to 6 seconds
 for these layouts and offer 10 seconds explicitly.
 

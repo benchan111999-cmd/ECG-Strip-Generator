@@ -20,7 +20,7 @@ class Geometry:
     margin_mm: float = 10.0
     top_mm: float = 22.0
     bottom_mm: float = 20.0
-    gap_mm: float = 8.0
+    gap_mm: float = 0.0
 
     def panel_bounds_mm(self, index: int) -> tuple[float, float, float, float]:
         x = self.margin_mm
@@ -34,7 +34,7 @@ class Geometry:
 def calculate_geometry(duration_s: float, preset: RenderPreset) -> Geometry:
     twelve = len(preset.displayed_leads) == 12
     rows = 4 if twelve else len(preset.displayed_leads)
-    gap = 0.0 if twelve else 8.0
+    gap = 0.0
     waveform_width = duration_s * preset.paper_speed_mm_s
     cell_width = 16.0 + waveform_width
     cell_height = 2 * preset.amplitude_limit_mv * preset.gain_mm_mv + 8.0

@@ -35,7 +35,7 @@ def test_encoded_page_geometry_and_determinism(tmp_path, count, rows, columns, p
     assert box
     # Expected independently: 10-s four-row print (12 leads) or 6-s rhythm rows.
     width = 286 if count == 12 else 186
-    height = 194 if count == 12 else 42 + rows * 48 + (rows - 1) * 8
+    height = 194 if count == 12 else 42 + rows * 48
     assert float(box[1]) == pytest.approx(width * 72 / 25.4, abs=1e-6)
     assert float(box[2]) == pytest.approx(height * 72 / 25.4, abs=1e-6)
     assert b"/CreationDate" not in pdf and b"/ModDate" not in pdf
@@ -228,3 +228,24 @@ def test_short_rhythm_request_creates_no_output(tmp_path) -> None:
     with pytest.raises(ValueError, match="at least 6 seconds"):
         render(RenderRequest.model_validate(payload), destination)
     assert not destination.exists()
+
+
+@pytest.mark.parametrize("count", range(2, 7))
+@pytest.mark.parametrize("duration", [6, 10])
+def test_rhythm_rows_share_continuous_grid(count, duration) -> None:
+    request = make_fixture(count, duration)
+    signal = prepare_signal(request)
+    geometry = calculate_geometry(signal.duration_s, request.preset)
+    fig = build_figure(request, signal, geometry)
+    try:
+        fig.canvas.draw()
+        for above, below in zip(fig.axes, fig.axes[1:], strict=False):
+            assert above.get_position().y0 == pytest.approx(below.get_position().y1)
+        for row, ax in enumerate(fig.axes):
+            y = geometry.panel_bounds_mm(row)[1]
+            for line in ax.collections[1].get_segments():
+                if line[0, 1] == line[1, 1]:
+                    grid_y = y + line[0, 1]
+                    assert grid_y / 5 == pytest.approx(round(grid_y / 5))
+    finally:
+        fig.clear()
