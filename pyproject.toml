@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ecg-strip-generator"
+version = "0.1.0"
+description = "Personal, non-commercial ECG teaching tool (development skeleton)"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "wfdb>=4.2,<5",
+    "numpy>=2,<3",
+    "scipy>=1.14,<2",
+    "pandas>=2.2,<3",
+    "matplotlib>=3.9,<4",
+    "pydantic>=2.10,<3",
+    "pyyaml>=6,<7",
+    "typer>=0.15,<1",
+    "rich>=13,<15",
+    "pillow>=11,<13",
+]
+
+[project.scripts]
+ecg-strip = "ecg_strip_generator.cli:app"
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff>=0.9,<1"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ecg_strip_generator"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+markers = ["dataset: requires explicitly named local datasets (never downloads them)"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

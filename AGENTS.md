@@ -28,7 +28,8 @@
 - Use the `main` branch for the current single-developer workflow.
 - Keep changes small and directly related to the requested work.
 - Run the relevant checks before proposing a commit.
-- Do not create a commit or push changes without asking the project owner first; the initial commit is the only currently approved exception.
+- The owner approved the revised execution plan on 2026-09-05. After each approved milestone passes its checks and scope review, create its specified local commit automatically.
+- Every remote push still requires separate project-owner approval.
 - Do not add deployment configuration yet.
 
 ## GitHub
@@ -45,6 +46,6 @@
 
 ## Commit scope
 
-- Ask before every commit and confirm the intended scope.
+- Commit only the scope of a verified, approved milestone. Ask before committing expanded or unapproved scope.
 - When approved, include project source, documentation, tests, and required configuration only.
 - Exclude secrets, local caches, generated output, and original source material unless the owner explicitly approves them.

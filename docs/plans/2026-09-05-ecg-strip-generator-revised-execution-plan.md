@@ -1,10 +1,10 @@
 # ECG Strip Generator — Revised Execution Plan
 
 **Date:** 2026-09-05
-**Status:** Draft for owner approval
+**Status:** Approved by the project owner on 2026-09-05
 **Repository:** `C:\Projects\ECG Strip Generator`
-**Replaces:** The proposed 27-phase execution plan, once this revision is approved
-**Implementation authorization:** Not granted by creation of this document
+**Replaces:** The proposed 27-phase execution plan
+**Implementation authorization:** Owner approved Milestones 0–7 on 2026-09-05 and requested that work begin with Milestone 0. Remote push remains separately gated.
 
 ## 1. Purpose
 
