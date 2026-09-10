@@ -1,13 +1,25 @@
 # ECG Strip Generator — Handoff
 
-Last updated: 2026-09-10
+Last updated: 2026-09-11
+
+## Latest owner-reviewed checkpoint
+
+- M4 implementation commit: 3d38f3a. Owner authorized commit and push of review
+  documentation and pending M4 work on 2026-09-11; verify Git state on resume.
+- SVDB 800 sample 61322: possible aberrantly conducted PAC; source V preserved.
+  See docs/reviews/2026-09-11-svdb-800-possible-aberrant-pac.md for facts and limits.
+  Advanced discussion only; excluded from beginner typical-PVC examples.
+- MITDB 100 targets 66792/74986 accepted as PAC demonstration/practice.
+  Clarity accepted; physical dimensions unverified and not required to continue review.
+- Next: select a clearer typical PVC and a real narrow-complex candidate.
+  Teaching release remains pending. The recovery checklist below is historical.
 
 ## Current position
 
 - Milestone 4 implementation and technical verification are complete.
 - Expected local commit subject: `feat: add ectopy and supraventricular source paths`.
   Read Git history and status for its SHA and current working-tree state.
-- No remote push is authorized by this handoff.
+- The 2026-09-11 push is explicitly authorized; future pushes need separate approval.
 - The earlier usage-limit interruption was recovered using scoped approved commands.
 
 ## Completed so far
