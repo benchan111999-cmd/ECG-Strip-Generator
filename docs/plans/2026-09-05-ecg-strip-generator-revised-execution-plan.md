@@ -585,6 +585,14 @@ PTB-XL leads does not fabricate leads. Clinical and teaching approval remain pen
 
 **Sources:** MIT-BIH Arrhythmia, SVDB, and INCART.
 
+**Owner-approved clarification, 2026-09-10:** SVDB may retain its recorded
+`ECG1` / `ECG2` channel names in draft output. Instructor provenance may note
+presumed MLII / V1 from historical laboratory practice (Olszewski 2001,
+p. 69 footnote 2, citing Moody personal communication). Individual-record lead
+identity remains unconfirmed: never alias these channels to II, MLII or V1,
+or use them to satisfy a standard-lead request. Clinical and teaching review
+remain separate human gates.
+
 **Verification:**
 
 - beat annotations align with extracted windows;

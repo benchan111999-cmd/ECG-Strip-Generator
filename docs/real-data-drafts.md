@@ -1,5 +1,41 @@
 # Real-data draft workflow
 
+## Milestone 4 annotated sources
+
+MITDB 1.0.0, SVDB 1.0.0 and INCART 1.0.0 support explicit local
+header/signal/annotation bundles. Every referenced file must pass receipt checks.
+Use a fresh output directory:
+
+```console
+uv run --locked ecg-strip cases draft-annotated BUNDLE --dataset mitdb --record 100 --lead MLII --lead V5 --start-sample 964 --end-sample 3124 --target-sample 2044 --category pac --output output/mitdb-pac
+uv run --locked ecg-strip cases audit-draft output/mitdb-pac
+uv run --locked ecg-strip coverage report --package output/mitdb-pac
+```
+
+Categories are `pac`, `pvc`, `supraventricular-ectopy`, and
+`narrow-complex-tachycardia`. They select review candidates, never diagnoses.
+The target requires surrounding beats and at least one second on each side.
+Annotations retain original sample coordinates plus window-relative coordinates.
+The narrow-complex category screens four rapid N/A/S beats including ectopy;
+it does not establish QRS width, sustained tachycardia, AVNRT or AVRT.
+An S annotation does not establish PAC. INCART beat locations may be misaligned;
+the tool preserves them without automatic relocation.
+
+SVDB uses only recorded `ECG1` and `ECG2` names. Historical presumed MLII/V1
+identity is disclosed in instructor provenance, never used as a lead alias.
+These sources require positive recorded gain; omitted baseline and unit fields
+use disclosed WFDB ADC-zero and mV conventions. Zero gain remains rejected.
+
+Coverage counts unique candidate case IDs among explicitly supplied audited
+packages. It reports gaps and zero released cases; release-state edits are
+rejected. Different views of one record are not independent patient examples.
+
+Set `ECG_MITDB_BUNDLE`, `ECG_SVDB_BUNDLE`, and `ECG_INCARTDB_BUNDLE` to verified
+bundles containing records 100, 800, and I01 respectively, then run
+`uv run --locked python -m pytest tests/dataset/test_annotated_local.py`.
+These opt-in tests compare independent format-212/16 ADC decoding and WFDB
+physical values, annotation alignment, and draft packaging without downloads.
+
 ## Scope and source decision
 
 Milestone 3 supports explicitly selected PTB-XL 1.0.3 `records500` records only.

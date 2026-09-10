@@ -19,6 +19,8 @@ Lead = Literal[
     "V6",
     "MLII",
     "MCL1",
+    "ECG1",
+    "ECG2",
 ]
 STANDARD_LEADS = ("I", "II", "III", "aVR", "aVL", "aVF", "V1", "V2", "V3", "V4", "V5", "V6")
 TWELVE_PANEL_ORDER = ("I", "aVR", "V1", "V4", "II", "aVL", "V2", "V5", "III", "aVF", "V3", "V6")

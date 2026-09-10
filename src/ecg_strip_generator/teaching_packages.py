@@ -1,4 +1,4 @@
-"""PTB-XL draft-only packaging with a closed student surface, not a release engine."""
+"""Source-verified draft packaging with a closed student surface, not a release engine."""
 
 import json
 import re
@@ -23,7 +23,16 @@ def verify_payloads(root: Path, payloads: dict[str, bytes]) -> None:
 
 
 def build_draft(
-    bundle: Path, record: str, leads: tuple[str, ...], output: Path, start: int = 0, end: int = 5000
+    bundle: Path,
+    record: str,
+    leads: tuple[str, ...],
+    output: Path,
+    start: int = 0,
+    end: int = 5000,
+    *,
+    dataset_id: str = "ptb-xl",
+    target: int | None = None,
+    category: str | None = None,
 ) -> Path:
     """Only source-verified requests constructed here may upgrade technical checks."""
     output = confined(output.parent, output.name)
@@ -31,7 +40,16 @@ def build_draft(
         raise FileExistsError("Draft destination exists; never overwrite")
     if output.resolve().is_relative_to(bundle.resolve()) or bundle.resolve().is_relative_to(output):
         raise ValueError("Draft output must be separate from raw source data")
-    candidate = select(bundle, record, leads, start, end)
+    if dataset_id == "ptb-xl":
+        if target is not None or category is not None:
+            raise ValueError("PTB-XL uses dataset statements, not a beat target")
+        candidate = select(bundle, record, leads, start, end)
+    else:
+        from ecg_strip_generator.datasets.annotated import select as select_annotated
+
+        candidate = select_annotated(
+            bundle, dataset_id, record, leads, start, end, target, category
+        )
     request = candidate.request
     # No caller title, prompt, case id, diagnosis, metadata or free-text route into figures.
     if request.preset.title or request.preset.teaching_prompt:
@@ -41,12 +59,13 @@ def build_draft(
     instructor = stage / "instructor" / request.case.case_id
     manifest = render(request, instructor)
     # Recheck immutable evidence after decoding/rendering, before promotion.
-    verify_bundle(bundle, load_registry()["ptb-xl"])
+    dataset = load_registry()[dataset_id]
+    verify_bundle(bundle, dataset)
     manifest["case"]["review"]["technical_validation"] = "passed"
     manifest["validation"]["raw_source_checksum"] = "verified"
     manifest["validation"]["scope"] += [
         "raw_source_files",
-        "explicit_adc_calibration",
+        "source_profile_adc_calibration",
         "consecutive_source_samples",
         "source_lead_mapping",
     ]
@@ -57,7 +76,15 @@ def build_draft(
     # The renderer's provisional manifest is replaced only inside unpublished staging.
     (instructor / "manifest.json").write_bytes(canonical_json(manifest))
     notice = candidate.attribution.encode("utf-8") + b"\n"
-    licence = confined(bundle, "files/LICENSE.txt").read_bytes()
+    if dataset_id == "ptb-xl":
+        licence = confined(bundle, "files/LICENSE.txt").read_bytes()
+    else:
+        licence = (
+            "Source database licence notice (link, not a copy of the licence text).\n"
+            f"{dataset.licence}: {dataset.licence_url}\n"
+            "Retain this notice and ATTRIBUTION.txt with these derivatives.\n"
+            "No project code licence or clinical endorsement is granted.\n"
+        ).encode()
     statement = candidate.provenance["statement"]
     instructor_notes = (
         "# Instructor draft\n\nDataset statements (not a project diagnosis):\n\n"
@@ -66,12 +93,23 @@ def build_draft(
         + "Source likelihood values are preserved; zero does not establish absence.\n"
         + "Inspect morphology and suitability manually before approving any label.\n"
     ).encode()
+    if dataset_id == "svdb":
+        instructor_notes += (
+            b"\nRecorded ECG1/ECG2 retained. Presumed MLII/V1 based on historical laboratory "
+            b"practice only; individual-record lead identity unconfirmed.\n"
+            b"Olszewski 2001, p69 footnote2, citing Moody personal communication.\n"
+            b"https://www.cs.cmu.edu/~bobski/pubs/tr01108-twosided.pdf#page=83\n"
+        )
     student_notes = (
         b"# ECG interpretation draft\n\nReview the rate, rhythm, intervals and morphology.\n"
         b"Not clinically reviewed. Not for teaching release or patient care.\n"
         b"Print PDF at 100%; disable fit-to-page. PNG is for screen display.\n"
         b"Keep ATTRIBUTION.txt and LICENSE.txt with these derivatives.\n"
     )
+    if dataset_id == "svdb":
+        student_notes += (
+            b"ECG1/ECG2 are recorded channel names; standard lead positions unconfirmed.\n"
+        )
     payloads = {}
     for role, notes in (("student", student_notes), ("instructor", instructor_notes)):
         prefix = f"{role}/{request.case.case_id}/"
