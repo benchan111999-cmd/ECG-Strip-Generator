@@ -2,6 +2,27 @@
 
 Last updated: 2026-09-11
 
+## Latest closeout — PVC/NCT teaching selection
+
+- Owner requested recording and a local commit of this session; no new push authorized.
+- Selected MITDB119 target42126 as the beginner PVC example.
+- Approved pedagogical sequence: cleaner MITDB209 case-4b9e906f0b6e6ea7,
+  artifact MITDB209 case-25717c7e542ef962, then SVDB840 case-cd7f2bf3bac107f3.
+  These are not one chronological recording or one continuous patient event.
+- Read docs/reviews/2026-09-11-approved-pvc-nct-teaching-sequence.md first.
+  Teach suspected hidden P waves/P-T separation and uncertainty; do not require
+  confirmed ST conversion. Adenosine discussion is conditional, not a universal
+  test for irregular NCT/MAT or a guarantee of diagnosis. Draft release fields unchanged.
+- 840 dual-channel 70-second context and independent sample comparison are in
+  docs/reviews/2026-09-11-svdb840-transition-review.md and ignored output artifacts.
+- This is candidate review, not full M5 AFDB/VFDB implementation. Resume that
+  approved scope separately; no need to repeat the search for the accepted examples.
+- Fresh closeout tests: 264 passed, 6 source-dependent skips without explicit
+  dataset environment variables; six review scripts pass Ruff lint and format.
+  Earlier 270-pass configured-data run remains historical, not this run's result.
+- Verify Git and canonical Obsidian dashboard for commit/sync status on resume.
+  All sections below are historical checkpoints, not current pending instructions.
+
 ## Latest owner-reviewed checkpoint
 
 - M4 implementation commit: 3d38f3a. Owner authorized commit and push of review
